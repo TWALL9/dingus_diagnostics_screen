@@ -2,7 +2,7 @@
 
 import gpiod
 import select
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
 import threading
 
@@ -17,10 +17,21 @@ def watch_line_value(chip_path, offset):
     chip = gpiod.Chip(chip_path)
     line = chip.get_line(offset)
     line.request("test", gpiod.LINE_REQ_EV_BOTH_EDGES, gpiod.LINE_REQ_FLAG_BIAS_PULL_UP)
-
+    debounce_ms = timedelta(milliseconds=250)
+    current_edge = None
+    last_change = datetime.now()
     while True:
-        for event in line.event_read():
-            print(edge_type_str(event))
+        event = line.event_read()
+        now = datetime.now()
+        # print(now, edge_type_str(event))
+        if current_edge != event.type:
+            db_time = now - last_change
+            # print(f"{current_edge} -> {event.type}: {db_time}")
+            if db_time >= debounce_ms:
+                print("\r\n", db_time, " changed:", edge_type_str(event), "\r\n")
+            last_change = now
+            current_edge = event.type
+            
 
 if __name__ == "__main__":
     done_fd = os.eventfd(0)
