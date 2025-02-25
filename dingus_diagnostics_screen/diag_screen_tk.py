@@ -4,6 +4,7 @@ import threading
 import time
 
 import modes
+from utils import get_comp_stats
 
 def create_screen(queue: Queue):
     root = tk.Tk()
@@ -19,21 +20,27 @@ def create_screen(queue: Queue):
     # Draw a border to resemble an LCD screen
     lcd_canvas.create_rectangle(30, 30, 380, 180, outline="green", width=3)
 
-    # Add text to simulate the screen display
-    lcd_canvas.create_text(190, 90, text="LCD Screen", font=("Courier", 20, "bold"), fill="green")
-
-    # Simulate an LCD-like font with glowing green text
-    lcd_canvas.create_text(190, 120, text="Hello, World!", font=("Courier", 16), fill="green")
-
+    text = ""
     # Add a simulated effect by changing text color or adding more text periodically
-    def update_display():
-        text = ""
+    def update_display(text):
+        lcd_canvas.delete("diag")
         if not queue.empty():
             text = queue.get()
-            lcd_canvas.delete("diag")
             text += str(mode.get())
-        lcd_canvas.create_text(190, 150, text=text, font=("Courier", 12), fill="light green", tags="diag")
-        root.after(100, update_display)
+        
+        mode_i = mode.get()
+        lcd_text = []
+        if mode_i == modes.Mode.COMP_STATS:
+            lcd_text = get_comp_stats()
+        elif mode_i == modes.Mode.URGENT_DIAGS:
+            lcd_text = [text]
+
+        y_pad = 60
+        for line in lcd_text:
+            lcd_canvas.create_text(190, y_pad, text=line, font=("Courier", 12), fill="light green", tags="diag")
+            y_pad += 30
+
+        root.after(100, lambda: update_display(text))
 
     def change_mode(_event):
         local_mode = mode.get()
@@ -44,7 +51,7 @@ def create_screen(queue: Queue):
     circle = button_canvas.create_oval(50, 50, 150, 150, fill="red", outline="black")
     button_canvas.tag_bind(circle, "<Button-1>", change_mode)
 
-    update_display()
+    update_display(text)
     root.mainloop()
 
 def main(args=None):
