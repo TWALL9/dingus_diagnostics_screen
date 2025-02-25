@@ -14,13 +14,13 @@ root.geometry("400x200")
 root.tk_setPalette(background="#2e2e2e", foreground="#FFFFFF")  # Background color for window
 style = ttk.Style(root)
 style.configure("TButton",
-                font=("Helvetica", 12),
+                font=("Arial", 12),
                 padding=10,
                 relief="flat",
                 background="#FF4C4C",
                 foreground="white")
 style.map("TButton", background=[("active", "#FF6B6B")])  # Change button color on hover
-style.configure("TText", background="#333333", foreground="#FFFFFF", font=("Helvetica", 12), wrap="word")
+style.configure("TText", background="#333333", foreground="#FFFFFF", font=("Arial", 12), wrap="word")
 
 # Create a square text box on the right side
 text_box = tk.Text(root, height=10, width=20, wrap=tk.WORD)
