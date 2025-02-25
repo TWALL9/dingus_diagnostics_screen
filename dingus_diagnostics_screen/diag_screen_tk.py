@@ -1,15 +1,16 @@
 from queue import Queue
-
 import tkinter as tk
 import threading
 import time
+
+import modes
 
 def create_screen(queue: Queue):
     root = tk.Tk()
     root.title("Dingus Diagnostics")
     root.geometry("640x480")
 
-    mode = tk.IntVar(value=0)
+    mode = tk.IntVar(value=modes.Mode.COMP_STATS)
 
     # Create a Canvas widget to simulate the LCD screen
     lcd_canvas = tk.Canvas(root, width=380, height=180, bg="black", bd=10, relief="sunken")
@@ -36,12 +37,7 @@ def create_screen(queue: Queue):
 
     def change_mode(_event):
         local_mode = mode.get()
-        local_mode += 1
-        
-        if local_mode > 2:
-            local_mode = 0
-        
-        mode.set(local_mode)
+        mode.set(modes.next_mode(local_mode))
 
     button_canvas = tk.Canvas(root, width=200, height=200)
     button_canvas.pack(pady=20)
