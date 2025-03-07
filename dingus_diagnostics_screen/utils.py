@@ -1,5 +1,6 @@
 import subprocess
 
+
 def get_comp_stats():
     cmd = "hostname -I | cut -d' ' -f1"
     ip = "IP: " + subprocess.check_output(cmd, shell=True).decode("utf-8")
