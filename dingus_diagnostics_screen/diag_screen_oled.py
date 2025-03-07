@@ -90,46 +90,49 @@ def update_screen(mode_queue: Queue, diag_queue: Queue):
         time.sleep(0.1)
 
 
-if __name__ == "__main__":
-    done_fd = os.eventfd(0)
-    queue = Queue()
+# def main(args=None):
+#     done_fd = os.eventfd(0)
+#     queue = Queue()
 
-    def bg_thread(q):
-        try:
-            watch_line_value("/dev/gpiochip0", 16, done_fd, q)
-        except OSError as ex:
-            print(f"GPIO Thread Exception: {ex}")
-        finally:
-            print("gpio thread exiting")
+#     def bg_thread(q):
+#         try:
+#             watch_line_value("/dev/gpiochip0", 16, done_fd, q)
+#         except OSError as ex:
+#             print(f"GPIO Thread Exception: {ex}")
+#         finally:
+#             print("gpio thread exiting")
 
-    t = threading.Thread(target=bg_thread, args=[queue])
-    t.start()
+#     t = threading.Thread(target=bg_thread, args=[queue])
+#     t.start()
 
-    def lcd_thread(q):
-        try:
-            update_screen(q)
-        except Exception as ex:
-            print(f"LCD Thread Exception: {ex}")
-        finally:
-            print("lcd thread exiting")
+#     def lcd_thread(q):
+#         try:
+#             update_screen(q)
+#         except Exception as ex:
+#             print(f"LCD Thread Exception: {ex}")
+#         finally:
+#             print("lcd thread exiting")
 
-    t2 = threading.Thread(target=lcd_thread, args=[queue])
-    t2.start()
+#     t2 = threading.Thread(target=lcd_thread, args=[queue])
+#     t2.start()
 
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        pass
+#     try:
+#         while True:
+#             time.sleep(1)
+#     except KeyboardInterrupt:
+#         pass
 
-    # for i in range(0, 20):
-    #     print("asdf:", i)
-    #     time.sleep(1)
+#     # for i in range(0, 20):
+#     #     print("asdf:", i)
+#     #     time.sleep(1)
 
-    if t.is_alive():
-        os.eventfd_write(done_fd, 1)
-        t.join()
-        t2.join()
+#     if t.is_alive():
+#         os.eventfd_write(done_fd, 1)
+#         t.join()
+#         t2.join()
 
-    os.close(done_fd)
-    print("main thread exiting")
+#     os.close(done_fd)
+#     print("main thread exiting")
+
+# if __name__ == "__main__":
+#     main()
