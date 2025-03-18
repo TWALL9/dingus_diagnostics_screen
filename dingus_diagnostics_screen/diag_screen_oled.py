@@ -16,7 +16,7 @@ import modes
 from utils import get_comp_stats
 
 
-def watch_line_value(chip_path, offset, done_fd, queue: Queue):
+def watch_line_value(chip_path, offset, done_fd, queue: Queue, kill_queue: Queue):
     chip = gpiod.Chip(chip_path)
     line = chip.get_line(offset)
     line.request(
@@ -35,17 +35,19 @@ def watch_line_value(chip_path, offset, done_fd, queue: Queue):
         for fd, _event in poll.poll():
             if fd == done_fd:
                 line.release()
-                queue.put(-1)
+                kill_queue.put(-1)
                 return
+            _line_event = line.event_read()
             now = datetime.now()
             db_time = now - last_change
             if db_time >= debounce_ms:
+                print("mode change")
                 mode = modes.next_mode(mode)
                 queue.put(mode)
             last_change = now
 
 
-def update_screen(mode_queue: Queue, diag_queue: Queue):
+def update_screen(mode_queue: Queue, diag_queue: Queue, kill_queue: Queue):
     i2c = busio.I2C(SCL, SDA)
     disp = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c, addr=0x3C)
 
@@ -63,26 +65,31 @@ def update_screen(mode_queue: Queue, diag_queue: Queue):
     font = ImageFont.load_default()
 
     mode = modes.Mode.COMP_STATS
-    diag_text = None
+    diag_text = "None?"
 
     while True:
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
 
         if not mode_queue.empty():
+            print("next mode")
             mode = mode_queue.get()
         if not diag_queue.empty():
             diag_text = diag_queue.get()
+        if not kill_queue.empty():
+            return
 
         lcd_text = []
 
         if mode == modes.Mode.COMP_STATS:
             lcd_text = get_comp_stats()
         elif mode == modes.Mode.URGENT_DIAGS:
-            lcd_text = [diag_text]
+            lcd_text = diag_text
+        else:
+            lcd_text = ["None?"]
 
         y_pad = top
         for line in lcd_text:
-            draw.text((x, y_pad), lcd_text, font=font, fill=255)
+            draw.text((x, y_pad), line, font=font, fill=255)
             y_pad += 16
 
         disp.image(image)
@@ -90,49 +97,46 @@ def update_screen(mode_queue: Queue, diag_queue: Queue):
         time.sleep(0.1)
 
 
-# def main(args=None):
-#     done_fd = os.eventfd(0)
-#     queue = Queue()
+def main(args=None):
+    done_fd = os.eventfd(0)
+    mode_queue = Queue()
+    kill_queue = Queue()
 
-#     def bg_thread(q):
-#         try:
-#             watch_line_value("/dev/gpiochip0", 16, done_fd, q)
-#         except OSError as ex:
-#             print(f"GPIO Thread Exception: {ex}")
-#         finally:
-#             print("gpio thread exiting")
+    t = threading.Thread(
+        target=watch_line_value,
+        args=["/dev/gpiochip0", 16, done_fd, mode_queue, kill_queue],
+    )
+    t.start()
 
-#     t = threading.Thread(target=bg_thread, args=[queue])
-#     t.start()
+    diag_queue = Queue()
+    t2 = threading.Thread(
+        target=update_screen, args=[mode_queue, diag_queue, kill_queue]
+    )
+    t2.start()
 
-#     def lcd_thread(q):
-#         try:
-#             update_screen(q)
-#         except Exception as ex:
-#             print(f"LCD Thread Exception: {ex}")
-#         finally:
-#             print("lcd thread exiting")
+    i = 0
+    try:
+        while True:
+            time.sleep(1)
+            print("asdf:", i)
+            diag_queue.put(["asdf", str(i)])
+            i += 1
+    except KeyboardInterrupt:
+        pass
 
-#     t2 = threading.Thread(target=lcd_thread, args=[queue])
-#     t2.start()
+    # for i in range(0, 20):
+    #     print("asdf:", i)
+    #     diag_queue.put(f"asdf\n{i}")
+    #     time.sleep(1)
 
-#     try:
-#         while True:
-#             time.sleep(1)
-#     except KeyboardInterrupt:
-#         pass
+    if t.is_alive():
+        os.eventfd_write(done_fd, 1)
+        t.join()
+        t2.join()
 
-#     # for i in range(0, 20):
-#     #     print("asdf:", i)
-#     #     time.sleep(1)
+    os.close(done_fd)
+    print("main thread exiting")
 
-#     if t.is_alive():
-#         os.eventfd_write(done_fd, 1)
-#         t.join()
-#         t2.join()
 
-#     os.close(done_fd)
-#     print("main thread exiting")
-
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()

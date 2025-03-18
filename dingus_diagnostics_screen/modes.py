@@ -7,8 +7,8 @@ class Mode(IntEnum):
 
 
 def next_mode(mode) -> Mode:
-    next_mode = mode + 1
-    if next_mode not in Mode:
-        return Mode.COMP_STATS
-    else:
-        return Mode(next_mode)
+    if mode == Mode.COMP_STATS:
+        mode = Mode.URGENT_DIAGS
+    elif mode == Mode.URGENT_DIAGS:
+        mode = Mode.COMP_STATS
+    return mode

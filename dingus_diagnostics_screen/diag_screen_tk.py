@@ -1,4 +1,7 @@
 from queue import Queue
+import threading
+import time
+
 import tkinter as tk
 
 import modes
@@ -64,17 +67,17 @@ def create_screen(queue: Queue):
     root.mainloop()
 
 
-# def main(args=None):
-#     queue = Queue()
-#     t = threading.Thread(target=create_screen, args=[queue])
-#     t.daemon = True
-#     t.start()
+def main(args=None):
+    queue = Queue()
+    t = threading.Thread(target=create_screen, args=[queue])
+    t.daemon = True
+    t.start()
 
-#     while True:
-#         for i in range(0, 5):
-#             queue.put(str(i))
-#             time.sleep(1)
+    while True:
+        for i in range(0, 5):
+            queue.put(str(i))
+            time.sleep(1)
 
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
