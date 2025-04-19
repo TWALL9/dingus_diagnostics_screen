@@ -5,7 +5,10 @@
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="thomaswallis0@gmail.com">tom</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
+
+  <exec_depend>python3-gpiod</exec_depend>
+  <exec_depend>python3-pil</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
