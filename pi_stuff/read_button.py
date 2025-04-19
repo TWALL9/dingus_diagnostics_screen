@@ -21,10 +21,13 @@ def edge_type_str(event):
         return "Rising"
     return "Unknown"
 
+
 def watch_line_value(chip_path, offset, done_fd, queue: Queue):
     chip = gpiod.Chip(chip_path)
     line = chip.get_line(offset)
-    line.request("test", gpiod.LINE_REQ_EV_FALLING_EDGE, gpiod.LINE_REQ_FLAG_BIAS_PULL_UP)
+    line.request(
+        "test", gpiod.LINE_REQ_EV_FALLING_EDGE, gpiod.LINE_REQ_FLAG_BIAS_PULL_UP
+    )
     debounce_ms = timedelta(milliseconds=150)
     last_change = datetime.now()
 

@@ -116,7 +116,8 @@ def main(args=None):
 
     i = 0
     try:
-        while True:
+        # while True:
+        while i < 20:
             time.sleep(1)
             print("asdf:", i)
             diag_queue.put(["asdf", str(i)])

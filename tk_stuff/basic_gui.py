@@ -1,11 +1,13 @@
 import tkinter as tk
 
+
 # Function to handle button click event
 def on_button_click(event):
     # Change the color of the circle when clicked
     current_color = canvas.itemcget(circle_button, "fill")
     new_color = "green" if current_color == "red" else "red"
     canvas.itemconfig(circle_button, fill=new_color)
+
 
 # Create the main window
 root = tk.Tk()
